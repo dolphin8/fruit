@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+aout="$1"
+target="$2"
+target=${target:-fruit}
+
+ldd $aout | sed -e 's/\s//g' | grep --color=no 'notfound'
+if (($? == 0)); then
+    echo -n "$(tput setaf 1)failed!$(tput sgr0) "
+    echo "please set $(tput setaf 3)LD_LIBRARY_PATH$(tput sgr0) to find the missing shared libraries"
+    exit $?
+fi
+
+mkdir -p $target/lib
+
+cp $aout $target
+fruit_path=$(readlink -f $0)
+fruit_dir=$(dirname $fruit_path)
+tar xzf ${fruit_dir}/patchelf.tar.gz -C $target/
+cat ${fruit_dir}/juice | sed -e 's/^ELF=.*$/ELF='$(basename $aout)'/' > $target/juice
+chmod +x $target/juice
+
+ldd $aout | sed -e 's/\s\|^.*=>\|(.*)//g' -ne '/.\+/p' | xargs cp -t $target/lib
+
+pushd $(dirname $target) &> /dev/null
+target_base_name=$(basename $target)
+tar czf ${target_base_name}.tar.gz ${target_base_name}
+rm -rf ${target_base_name}
+popd &> /dev/null
+

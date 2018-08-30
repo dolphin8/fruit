@@ -9,8 +9,8 @@ if [[ $LASTPATCHDIR != ${fruit_dir} ]] ; then
     echo "$(tput setaf 3)Patching...$(tput sgr0)"
     loader_path=$(readlink -f $(find $fruit_dir/lib -name ld-linux*|head -n1))
     pushd ${fruit_dir}/.patchelf &>/dev/null
-    ./ld-linux-x86-64.so.2 ./patchelf --set-interpreter ${loader_path} ${fruit_dir}/$ELF &> /dev/null
-    ./ld-linux-x86-64.so.2 ./patchelf --set-rpath ${fruit_dir}/lib:'$ORIGIN' ${fruit_dir}/$ELF &> /dev/null
+    LD_LIBRARY_PATH=. ./ld-linux-x86-64.so.2 ./patchelf --set-interpreter ${loader_path} ${fruit_dir}/$ELF &> /dev/null
+    LD_LIBRARY_PATH=. ./ld-linux-x86-64.so.2 ./patchelf --set-rpath ${fruit_dir}/lib:'$ORIGIN' ${fruit_dir}/$ELF &> /dev/null
     popd &>/dev/null
     sed -i -e 's#^LASTPATCHDIR=.*#LASTPATCHDIR='${fruit_dir}'#g' ${fruit_dir}/juice
     echo "$(tput setaf 3)Done!$(tput sgr0)"
